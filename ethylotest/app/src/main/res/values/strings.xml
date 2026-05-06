@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">ethylotest</string>
+    <string name="label_personne">Personne</string>
+    <string name="label_poids">Poids</string>
+    <string name="label_sexe">Femme/Homme</string>
+    <string name="label_debutant">Conducteur débutant</string>
+</resources>
