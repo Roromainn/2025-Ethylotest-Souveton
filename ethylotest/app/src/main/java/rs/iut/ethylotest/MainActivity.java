@@ -1,11 +1,7 @@
 package rs.iut.ethylotest;
 
-import android.app.AlertDialog;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Switch;
 
@@ -14,6 +10,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+
+import com.google.gson.Gson;
 
 public class MainActivity extends AppCompatActivity {
     private EditText editTextPoids;
@@ -39,39 +37,46 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onPause() {
-        super.onPause();
-        saveState();
+    protected void onStop() {
+        controlsToPersonne();
+        savePersonne();
+        super.onStop();
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        restoreState();
+    protected void onStart() {
+        super.onStart();
+        loadPersonne();
+        personneToControls();
     }
 
-    private void saveState() {
-        personne.setPoids(editTextPoids.getText().toString());
-        personne.setSexe(switchSexe.isChecked());
-        personne.setDebutant(switchDebutant.isChecked());
-
-        SharedPreferences prefs = getSharedPreferences("ethylotest_prefs", MODE_PRIVATE);
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putString("poids", personne.getPoids());
-        editor.putBoolean("sexe", personne.isSexe());
-        editor.putBoolean("debutant", personne.isDebutant());
-        editor.apply();
-    }
-
-    private void restoreState() {
-        SharedPreferences prefs = getSharedPreferences("ethylotest_prefs", MODE_PRIVATE);
-        personne.setPoids(prefs.getString("poids", ""));
-        personne.setSexe(prefs.getBoolean("sexe", false));
-        personne.setDebutant(prefs.getBoolean("debutant", false));
-
+    private void personneToControls() {
         editTextPoids.setText(personne.getPoids());
         switchSexe.setChecked(personne.isSexe());
         switchDebutant.setChecked(personne.isDebutant());
     }
 
+    private void controlsToPersonne() {
+        personne.setPoids(editTextPoids.getText().toString());
+        personne.setSexe(switchSexe.isChecked());
+        personne.setDebutant(switchDebutant.isChecked());
+    }
+
+    private void savePersonne() {
+        SharedPreferences prefs = getSharedPreferences("ethylotest_prefs", MODE_PRIVATE);
+        SharedPreferences.Editor ed = prefs.edit();
+        Gson gson = new Gson();
+        String str = gson.toJson(personne);
+        ed.putString("personne", str);
+        ed.apply();
+    }
+
+    private void loadPersonne() {
+        SharedPreferences prefs = getSharedPreferences("ethylotest_prefs", MODE_PRIVATE);
+        String str = prefs.getString("personne", null);
+        if (str != null) {
+            Gson gson = new Gson();
+            personne = gson.fromJson(str, Personne.class);
+        }
+    }
 }
