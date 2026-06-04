@@ -1,6 +1,8 @@
 package rs.iut.ethylotest;
 
-public class Personne {
+import java.io.Serializable;
+
+public class Personne implements Serializable {
     private String poids;
     private boolean sexe;
     private boolean debutant;
