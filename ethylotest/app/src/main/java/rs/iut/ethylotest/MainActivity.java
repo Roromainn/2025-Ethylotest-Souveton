@@ -1,11 +1,17 @@
 package rs.iut.ethylotest;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Switch;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -18,6 +24,9 @@ public class MainActivity extends AppCompatActivity {
     private Switch switchSexe;
     private Switch switchDebutant;
     private Personne personne;
+
+    private Button btnConso;
+    private ActivityResultLauncher<Intent> activityResultLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,6 +43,18 @@ public class MainActivity extends AppCompatActivity {
         switchSexe = findViewById(R.id.sexe);
         switchDebutant = findViewById(R.id.debutant);
         personne = new Personne();
+
+        btnConso = findViewById(R.id.passer_conso);
+        btnConso.setOnClickListener(this::onConsoClick);
+
+        activityResultLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
+                        returnFromEditPerson(result.getData());
+                    }
+                }
+        );
     }
 
     @Override
@@ -51,12 +72,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void personneToControls() {
-        editTextPoids.setText(personne.getPoids());
-        switchSexe.setChecked(personne.isSexe());
-        switchDebutant.setChecked(personne.isDebutant());
+        if (personne != null) {
+            editTextPoids.setText(personne.getPoids());
+            switchSexe.setChecked(personne.isSexe());
+            switchDebutant.setChecked(personne.isDebutant());
+        }
     }
 
     private void controlsToPersonne() {
+        if (personne == null) personne = new Personne();
         personne.setPoids(editTextPoids.getText().toString());
         personne.setSexe(switchSexe.isChecked());
         personne.setDebutant(switchDebutant.isChecked());
@@ -77,6 +101,24 @@ public class MainActivity extends AppCompatActivity {
         if (str != null) {
             Gson gson = new Gson();
             personne = gson.fromJson(str, Personne.class);
+        }
+    }
+
+    private void onConsoClick(View v) {
+        controlsToPersonne();
+        
+        Intent intent = new Intent(this, Alcool.class);
+        intent.putExtra("person", personne);
+        activityResultLauncher.launch(intent);
+    }
+
+    /**
+     * Appelée au retour de Alcool avec RESULT_OK.
+     */
+    private void returnFromEditPerson(Intent data) {
+        if (data != null && data.getExtras() != null) {
+            personne = (Personne) data.getExtras().getSerializable("person");
+            personneToControls();
         }
     }
 }
