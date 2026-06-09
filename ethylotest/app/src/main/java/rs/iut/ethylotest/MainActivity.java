@@ -105,7 +105,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void onConsoClick(View v) {
-        // On met à jour l'objet personne avec les saisies actuelles avant de l'envoyer
         controlsToPersonne();
         
         Intent intent = new Intent(this, Alcool.class);

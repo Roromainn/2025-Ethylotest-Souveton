@@ -2,7 +2,32 @@
     <string name="app_name">ethylotest</string>
     <string name="label_personne">Personne</string>
     <string name="label_poids">Poids</string>
-    <string name="label_sexe">Femme/Homme</string>
+    <string name="label_sexe">Sexe</string>
+    <string name="sexe_on">Femme</string>
+    <string name="sexe_off">Homme</string>
     <string name="label_debutant">Conducteur débutant</string>
     <string name="passer_conso">Passer à l\'écran de consommation</string>
+
+    <!-- Écran boisson -->
+    <string name="label_boisson">Consommation</string>
+    <string name="label_predefinies">Boisson prédéfinie</string>
+    <string name="label_volume">Volume (ml)</string>
+    <string name="label_degre">Degré d\'alcool (%)</string>
+    <string name="hint_volume">ex: 250</string>
+    <string name="hint_degre">ex: 6</string>
+    <string name="btn_consommer">Consommer</string>
+    <string name="btn_retour">Retour</string>
+    <string name="taux_actuel">Taux actuel : %.2f g/l</string>
+    <string name="boisson_ajoutee">+%.2f g/l ajouté</string>
+    <string name="erreur_saisie">Volume et degré doivent être renseignés</string>
+    <string name="erreur_personne">Veuillez d\'abord renseigner les informations personnelles</string>
+    <string name="erreur_poids">Poids invalide</string>
+
+    <!-- Tableau boissons prédéfinies -->
+    <string-array name="boissons_predefinies">
+        <item>Vin (12cl, 13%)</item>
+        <item>Bière (25cl, 6%)</item>
+        <item>Whisky (2cl, 40%)</item>
+        <item>Personnalisé</item>
+    </string-array>
 </resources>
