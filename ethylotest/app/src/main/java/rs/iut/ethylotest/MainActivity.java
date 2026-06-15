@@ -91,17 +91,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void savePersonne() {
-        SharedPreferences prefs = getSharedPreferences("ethylotest_prefs", MODE_PRIVATE);
+        SharedPreferences prefs = getSharedPreferences(Constantes.PREFS_NAME, MODE_PRIVATE);
         SharedPreferences.Editor ed = prefs.edit();
         Gson gson = new Gson();
         String str = gson.toJson(personne);
-        ed.putString("personne", str);
+        ed.putString(Constantes.PREF_PERSONNE, str);
         ed.apply();
     }
 
     private void loadPersonne() {
-        SharedPreferences prefs = getSharedPreferences("ethylotest_prefs", MODE_PRIVATE);
-        String str = prefs.getString("personne", null);
+        SharedPreferences prefs = getSharedPreferences(Constantes.PREFS_NAME, MODE_PRIVATE);
+        String str = prefs.getString(Constantes.PREF_PERSONNE, null);
         if (str != null) {
             Gson gson = new Gson();
             personne = gson.fromJson(str, Personne.class);

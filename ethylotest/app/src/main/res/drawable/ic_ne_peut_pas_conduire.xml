@@ -4,12 +4,12 @@
     android:height="96dp"
     android:viewportWidth="96"
     android:viewportHeight="96">
+    <!-- Cercle rouge -->
     <path
         android:fillColor="#F44336"
-        android:pathData="M48,4a44,44 0,1 1,0 88,44 44,0 0,1 0,-88z" />
+        android:pathData="M48,4 C23.7,4 4,23.7 4,48 C4,72.3 23.7,92 48,92 C72.3,92 92,72.3 92,48 C92,23.7 72.3,4 48,4 Z" />
+    <!-- Croix blanche (forme remplie) -->
     <path
         android:fillColor="#FFFFFF"
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="6"
-        android:pathData="M32,32 L64,64M64,32 L32,64" />
+        android:pathData="M58,48 L72,34 L62,24 L48,38 L34,24 L24,34 L38,48 L24,62 L34,72 L48,58 L62,72 L72,62 Z" />
 </vector>

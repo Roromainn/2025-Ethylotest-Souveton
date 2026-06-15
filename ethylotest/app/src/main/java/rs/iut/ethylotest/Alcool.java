@@ -42,8 +42,12 @@ public class Alcool extends AppCompatActivity {
     private final Runnable runnable = new Runnable() {
         @Override
         public void run() {
-            afficherTauxActuel();
-            handler.postDelayed(this, 1000);
+            try {
+                afficherTauxActuel();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            handler.postDelayed(this, Constantes.INTERVALLE_MAJ_MS);
         }
     };
 
@@ -124,16 +128,16 @@ public class Alcool extends AppCompatActivity {
     }
 
     private void saveBoisson() {
-        SharedPreferences prefs = getSharedPreferences("ethylotest_prefs", MODE_PRIVATE);
+        SharedPreferences prefs = getSharedPreferences(Constantes.PREFS_NAME, MODE_PRIVATE);
         SharedPreferences.Editor ed = prefs.edit();
         Gson gson = new Gson();
-        ed.putString("boisson", gson.toJson(boisson));
+        ed.putString(Constantes.PREF_BOISSON, gson.toJson(boisson));
         ed.apply();
     }
 
     private void loadBoisson() {
-        SharedPreferences prefs = getSharedPreferences("ethylotest_prefs", MODE_PRIVATE);
-        String str = prefs.getString("boisson", null);
+        SharedPreferences prefs = getSharedPreferences(Constantes.PREFS_NAME, MODE_PRIVATE);
+        String str = prefs.getString(Constantes.PREF_BOISSON, null);
         if (str != null) {
             Gson gson = new Gson();
             boisson = gson.fromJson(str, Boisson.class);
@@ -153,8 +157,8 @@ public class Alcool extends AppCompatActivity {
         }
 
         // Lire la personne
-        SharedPreferences prefs = getSharedPreferences("ethylotest_prefs", MODE_PRIVATE);
-        String strPersonne = prefs.getString("personne", null);
+        SharedPreferences prefs = getSharedPreferences(Constantes.PREFS_NAME, MODE_PRIVATE);
+        String strPersonne = prefs.getString(Constantes.PREF_PERSONNE, null);
         if (strPersonne == null) {
             Toast.makeText(this, getString(R.string.erreur_personne), Toast.LENGTH_SHORT).show();
             return;
@@ -178,17 +182,17 @@ public class Alcool extends AppCompatActivity {
         }
 
         double contribution = boisson.getVolume() * boisson.getDegre() * 0.8 / (absorb * poids);
-        double tauxActuel = Double.parseDouble(prefs.getString("taux_actuel", "0.0"));
-        long dernierTimestamp = prefs.getLong("timestamp_maj", System.currentTimeMillis());
+        double tauxActuel = Double.parseDouble(prefs.getString(Constantes.PREF_TAUX, "0.0"));
+        long dernierTimestamp = prefs.getLong(Constantes.PREF_TIMESTAMP, System.currentTimeMillis());
         long maintenant = System.currentTimeMillis();
         double heuresEcoulees = (maintenant - dernierTimestamp) / 3600000.0;
-        tauxActuel = Math.max(0, tauxActuel - heuresEcoulees * 0.15);
-        tauxActuel += contribution; 
+        tauxActuel = Math.max(0, tauxActuel - heuresEcoulees * Constantes.TAUX_ELIMINATION);
+        tauxActuel += contribution;
 
         // Sauvegarder
         SharedPreferences.Editor ed = prefs.edit();
-        ed.putString("taux_actuel", String.valueOf(tauxActuel));
-        ed.putLong("timestamp_maj", maintenant);
+        ed.putString(Constantes.PREF_TAUX, String.valueOf(tauxActuel));
+        ed.putLong(Constantes.PREF_TIMESTAMP, maintenant);
         ed.apply();
 
         saveBoisson();
@@ -199,11 +203,11 @@ public class Alcool extends AppCompatActivity {
     }
 
     private void afficherTauxActuel() {
-        SharedPreferences prefs = getSharedPreferences("ethylotest_prefs", MODE_PRIVATE);
-        double taux = Double.parseDouble(prefs.getString("taux_actuel", "0.0"));
-        long dernierTimestamp = prefs.getLong("timestamp_maj", System.currentTimeMillis());
+        SharedPreferences prefs = getSharedPreferences(Constantes.PREFS_NAME, MODE_PRIVATE);
+        double taux = Double.parseDouble(prefs.getString(Constantes.PREF_TAUX, "0.0"));
+        long dernierTimestamp = prefs.getLong(Constantes.PREF_TIMESTAMP, System.currentTimeMillis());
         double heuresEcoulees = (System.currentTimeMillis() - dernierTimestamp) / 3600000.0;
-        taux = Math.max(0, taux - heuresEcoulees * 0.15);
+        taux = Math.max(0, taux - heuresEcoulees * Constantes.TAUX_ELIMINATION);
         tvTauxActuel.setText(String.format(getString(R.string.taux_actuel), taux));
     }
 }

@@ -4,12 +4,12 @@
     android:height="96dp"
     android:viewportWidth="96"
     android:viewportHeight="96">
+    <!-- Cercle vert -->
     <path
         android:fillColor="#4CAF50"
-        android:pathData="M48,4a44,44 0,1 1,0 88,44 44,0 0,1 0,-88z" />
+        android:pathData="M48,4 C23.7,4 4,23.7 4,48 C4,72.3 23.7,92 48,92 C72.3,92 92,72.3 92,48 C92,23.7 72.3,4 48,4 Z" />
+    <!-- Coche blanche (forme remplie) -->
     <path
         android:fillColor="#FFFFFF"
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="4"
-        android:pathData="M26,50 L40,64 L70,34" />
+        android:pathData="M38,65 L22,49 L28,43 L38,53 L68,28 L74,34 Z" />
 </vector>
