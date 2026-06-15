@@ -23,6 +23,13 @@
     <string name="erreur_personne">Veuillez d\'abord renseigner les informations personnelles</string>
     <string name="erreur_poids">Poids invalide</string>
 
+    <!-- Écran alcoolémie -->
+    <string name="label_alcoolemie">Alcoolémie</string>
+    <string name="peut_conduire">Vous pouvez conduire</string>
+    <string name="heure_conduite">Conduisible à partir de %s</string>
+    <string name="btn_voir_alcoolemie">Voir l\'alcoolémie</string>
+    <string name="cd_image_conduite">Indicateur de conduite</string>
+
     <!-- Tableau boissons prédéfinies -->
     <string-array name="boissons_predefinies">
         <item>Vin (12cl, 13%)</item>

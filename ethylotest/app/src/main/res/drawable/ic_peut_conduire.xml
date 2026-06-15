@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Cercle vert -->
+    <path
+        android:fillColor="#4CAF50"
+        android:pathData="M48,4 C23.7,4 4,23.7 4,48 C4,72.3 23.7,92 48,92 C72.3,92 92,72.3 92,48 C92,23.7 72.3,4 48,4 Z" />
+    <!-- Coche blanche (forme remplie) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M38,65 L22,49 L28,43 L38,53 L68,28 L74,34 Z" />
+</vector>

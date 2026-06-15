@@ -19,6 +19,7 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.google.gson.Gson;
 
+/** Écran principal : saisie des informations de la personne (poids, sexe, débutant). */
 public class MainActivity extends AppCompatActivity {
     private EditText editTextPoids;
     private Switch switchSexe;
@@ -28,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
     private Button btnConso;
     private ActivityResultLauncher<Intent> activityResultLauncher;
 
+    /** Initialise l'interface et les listeners. */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,6 +59,7 @@ public class MainActivity extends AppCompatActivity {
         );
     }
 
+    /** Sauvegarde les données de la personne dans les SharedPreferences. */
     @Override
     protected void onStop() {
         controlsToPersonne();
@@ -64,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
         super.onStop();
     }
 
+    /** Restaure les données de la personne depuis les SharedPreferences. */
     @Override
     protected void onStart() {
         super.onStart();
@@ -87,17 +91,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void savePersonne() {
-        SharedPreferences prefs = getSharedPreferences("ethylotest_prefs", MODE_PRIVATE);
+        SharedPreferences prefs = getSharedPreferences(Constantes.PREFS_NAME, MODE_PRIVATE);
         SharedPreferences.Editor ed = prefs.edit();
         Gson gson = new Gson();
         String str = gson.toJson(personne);
-        ed.putString("personne", str);
+        ed.putString(Constantes.PREF_PERSONNE, str);
         ed.apply();
     }
 
     private void loadPersonne() {
-        SharedPreferences prefs = getSharedPreferences("ethylotest_prefs", MODE_PRIVATE);
-        String str = prefs.getString("personne", null);
+        SharedPreferences prefs = getSharedPreferences(Constantes.PREFS_NAME, MODE_PRIVATE);
+        String str = prefs.getString(Constantes.PREF_PERSONNE, null);
         if (str != null) {
             Gson gson = new Gson();
             personne = gson.fromJson(str, Personne.class);
