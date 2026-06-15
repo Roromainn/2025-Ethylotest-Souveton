@@ -19,6 +19,7 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.google.gson.Gson;
 
+/** Écran principal : saisie des informations de la personne (poids, sexe, débutant). */
 public class MainActivity extends AppCompatActivity {
     private EditText editTextPoids;
     private Switch switchSexe;
@@ -28,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
     private Button btnConso;
     private ActivityResultLauncher<Intent> activityResultLauncher;
 
+    /** Initialise l'interface et les listeners. */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,6 +59,7 @@ public class MainActivity extends AppCompatActivity {
         );
     }
 
+    /** Sauvegarde les données de la personne dans les SharedPreferences. */
     @Override
     protected void onStop() {
         controlsToPersonne();
@@ -64,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
         super.onStop();
     }
 
+    /** Restaure les données de la personne depuis les SharedPreferences. */
     @Override
     protected void onStart() {
         super.onStart();

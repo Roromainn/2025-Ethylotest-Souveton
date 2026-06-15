@@ -1,7 +1,10 @@
 package rs.iut.ethylotest;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -15,6 +18,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.gson.Gson;
 
+/** Écran de saisie d'une boisson : sélection prédéfinie ou personnalisée, et déclenchement de la consommation. */
 public class Alcool extends AppCompatActivity {
 
     // Boissons prédéfinies : {volume en ml, degré en fraction}
@@ -34,6 +38,16 @@ public class Alcool extends AppCompatActivity {
 
     private Boisson boisson;
 
+    private final Handler handler = new Handler(Looper.getMainLooper());
+    private final Runnable runnable = new Runnable() {
+        @Override
+        public void run() {
+            afficherTauxActuel();
+            handler.postDelayed(this, 1000);
+        }
+    };
+
+    /** Initialise l'interface, le spinner de boissons et les listeners. */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -52,17 +66,22 @@ public class Alcool extends AppCompatActivity {
 
         btnConsommer.setOnClickListener(this::onConsommer);
         btnRetour.setOnClickListener(v -> finish());
+        findViewById(R.id.btnVoirAlcoolemie).setOnClickListener(v ->
+                startActivity(new Intent(this, AlcoolemieActivity.class)));
     }
 
+    /** Restaure la dernière boisson saisie et démarre le rafraîchissement du taux. */
     @Override
     protected void onStart() {
         super.onStart();
         loadBoisson();
-        afficherTauxActuel();
+        handler.post(runnable);
     }
 
+    /** Stoppe le timer et sauvegarde la boisson courante dans les SharedPreferences. */
     @Override
     protected void onStop() {
+        handler.removeCallbacks(runnable);
         controlsToBoisson();
         saveBoisson();
         super.onStop();
@@ -164,7 +183,7 @@ public class Alcool extends AppCompatActivity {
         long maintenant = System.currentTimeMillis();
         double heuresEcoulees = (maintenant - dernierTimestamp) / 3600000.0;
         tauxActuel = Math.max(0, tauxActuel - heuresEcoulees * 0.15);
-        tauxActuel += contribution;
+        tauxActuel += contribution; 
 
         // Sauvegarder
         SharedPreferences.Editor ed = prefs.edit();
