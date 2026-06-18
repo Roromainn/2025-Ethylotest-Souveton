@@ -30,6 +30,11 @@
     <string name="btn_voir_alcoolemie">Voir l\'alcoolémie</string>
     <string name="cd_image_conduite">Indicateur de conduite</string>
 
+    <!-- Notifications -->
+    <string name="notif_channel_name">Alcoolémie</string>
+    <string name="notif_titre">Vous pouvez conduire !</string>
+    <string name="notif_message">Votre alcoolémie est redescendue sous le seuil légal.</string>
+
     <!-- Tableau boissons prédéfinies -->
     <string-array name="boissons_predefinies">
         <item>Vin (12cl, 13%)</item>

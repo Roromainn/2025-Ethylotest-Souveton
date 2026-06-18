@@ -6,6 +6,11 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
+
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkManager;
+
+import java.util.concurrent.TimeUnit;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -21,7 +26,7 @@ import com.google.gson.Gson;
 /** Écran de saisie d'une boisson : sélection prédéfinie ou personnalisée, et déclenchement de la consommation. */
 public class Alcool extends AppCompatActivity {
 
-    // Boissons prédéfinies : {volume en ml, degré en fraction}
+    // Boissons prédéfinies : volume en ml, degré en fraction
     private static final double[][] PREDEFINIS = {
             {120, 0.13},  // Vin
             {250, 0.06},  // Bière
@@ -197,9 +202,30 @@ public class Alcool extends AppCompatActivity {
 
         saveBoisson();
         afficherTauxActuel();
+
+        double seuil = personne.isDebutant() ? Constantes.SEUIL_DEBUTANT : Constantes.SEUIL_NORMAL;
+        planifierNotification(tauxActuel, seuil);
+
         Toast.makeText(this,
                 String.format(getString(R.string.boisson_ajoutee), contribution),
                 Toast.LENGTH_SHORT).show();
+    }
+
+    private void planifierNotification(double taux, double seuil) {
+        WorkManager wm = WorkManager.getInstance(this);
+        wm.cancelAllWorkByTag(Constantes.NOTIF_TAG);
+
+        if (taux <= seuil) return;
+
+        double heuresRestantes = (taux - seuil) / Constantes.TAUX_ELIMINATION;
+        long delayMs = (long) (heuresRestantes * 3600000);
+
+        OneTimeWorkRequest requete = new OneTimeWorkRequest.Builder(NotificationWorker.class)
+                .setInitialDelay(delayMs, TimeUnit.MILLISECONDS)
+                .addTag(Constantes.NOTIF_TAG)
+                .build();
+
+        wm.enqueue(requete);
     }
 
     private void afficherTauxActuel() {

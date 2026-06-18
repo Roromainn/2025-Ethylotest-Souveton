@@ -28,4 +28,13 @@ public class Constantes {
 
     /** Nom du fichier SharedPreferences. */
     public static final String PREFS_NAME = "ethylotest_prefs";
+
+    /** ID du canal de notification Android O+. */
+    public static final String NOTIF_CHANNEL_ID = "alcoolemie_channel";
+
+    /** Tag WorkManager pour annuler/remplacer la notification programmée. */
+    public static final String NOTIF_TAG = "notification_conduite";
+
+    /** ID de la notification affichée. */
+    public static final int NOTIF_ID = 1;
 }
