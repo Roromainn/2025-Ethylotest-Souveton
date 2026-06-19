@@ -1,6 +1,5 @@
 package rs.iut.ethylotest;
 
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -8,8 +7,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
-
-import com.google.gson.Gson;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -21,6 +18,8 @@ public class AlcoolemieActivity extends AppCompatActivity {
     private TextView tvTaux;
     private TextView tvHeureConduite;
     private ImageView imgConduite;
+
+    private AlcoolRepository repository;
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Runnable runnable = new Runnable() {
@@ -41,9 +40,11 @@ public class AlcoolemieActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_alcoolemie);
 
-        tvTaux         = findViewById(R.id.tvTaux);
+        repository = new AlcoolRepository(this);
+
+        tvTaux = findViewById(R.id.tvTaux);
         tvHeureConduite = findViewById(R.id.tvHeureConduite);
-        imgConduite    = findViewById(R.id.imgConduite);
+        imgConduite = findViewById(R.id.imgConduite);
 
         findViewById(R.id.btnRetourAlcoolemie).setOnClickListener(v -> finish());
     }
@@ -63,20 +64,11 @@ public class AlcoolemieActivity extends AppCompatActivity {
     }
 
     private void rafraichir() {
-        SharedPreferences prefs = getSharedPreferences(Constantes.PREFS_NAME, MODE_PRIVATE);
-
-        double taux = Double.parseDouble(prefs.getString(Constantes.PREF_TAUX, "0.0"));
-        long timestamp = prefs.getLong(Constantes.PREF_TIMESTAMP, System.currentTimeMillis());
-        double heuresEcoulees = (System.currentTimeMillis() - timestamp) / 3600000.0;
-        taux = Math.max(0, taux - heuresEcoulees * Constantes.TAUX_ELIMINATION);
-
-        boolean debutant = false;
-        String strPersonne = prefs.getString(Constantes.PREF_PERSONNE, null);
-        if (strPersonne != null) {
-            Personne personne = new Gson().fromJson(strPersonne, Personne.class);
-            debutant = personne.isDebutant();
-        }
-        double seuil = debutant ? Constantes.SEUIL_DEBUTANT : Constantes.SEUIL_NORMAL;
+        double taux = AlcoolCalculateur.calculerTauxActuel(repository.loadTaux(), repository.loadTimestamp());
+        Personne personne = repository.loadPersonne();
+        double seuil = personne != null
+                ? AlcoolCalculateur.getSeuil(personne)
+                : Constantes.SEUIL_NORMAL;
 
         tvTaux.setText(String.format(Locale.FRANCE, getString(R.string.taux_actuel), taux));
 
@@ -85,8 +77,8 @@ public class AlcoolemieActivity extends AppCompatActivity {
             tvHeureConduite.setText(R.string.peut_conduire);
         } else {
             imgConduite.setImageResource(R.drawable.ic_ne_peut_pas_conduire);
-            double heuresRestantes = (taux - seuil) / Constantes.TAUX_ELIMINATION;
-            long msConduite = System.currentTimeMillis() + (long) (heuresRestantes * 3600000);
+            double heuresRestantes = AlcoolCalculateur.heuresAvantConduite(taux, personne);
+            long msConduite = System.currentTimeMillis() + (long) (heuresRestantes * Constantes.MS_PAR_HEURE);
             String heureStr = new SimpleDateFormat("HH:mm", Locale.FRANCE).format(new Date(msConduite));
             tvHeureConduite.setText(String.format(getString(R.string.heure_conduite), heureStr));
         }
