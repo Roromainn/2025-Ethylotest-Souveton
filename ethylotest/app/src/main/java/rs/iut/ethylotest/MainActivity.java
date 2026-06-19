@@ -3,7 +3,6 @@ package rs.iut.ethylotest;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -21,14 +20,14 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.google.gson.Gson;
-
 /** Écran principal : saisie des informations de la personne (poids, sexe, débutant). */
 public class MainActivity extends AppCompatActivity {
+
     private EditText editTextPoids;
     private Switch switchSexe;
     private Switch switchDebutant;
     private Personne personne;
+    private AlcoolRepository repository;
 
     private Button btnConso;
     private ActivityResultLauncher<Intent> activityResultLauncher;
@@ -44,6 +43,8 @@ public class MainActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
+        repository = new AlcoolRepository(this);
 
         editTextPoids = findViewById(R.id.editTextNumberDecimal);
         switchSexe = findViewById(R.id.sexe);
@@ -65,19 +66,20 @@ public class MainActivity extends AppCompatActivity {
         );
     }
 
-    /** Sauvegarde les données de la personne dans les SharedPreferences. */
+    /** Sauvegarde les données de la personne. */
     @Override
     protected void onStop() {
         controlsToPersonne();
-        savePersonne();
+        repository.savePersonne(personne);
         super.onStop();
     }
 
-    /** Restaure les données de la personne depuis les SharedPreferences. */
+    /** Restaure les données de la personne. */
     @Override
     protected void onStart() {
         super.onStart();
-        loadPersonne();
+        Personne charge = repository.loadPersonne();
+        if (charge != null) personne = charge;
         personneToControls();
     }
 
@@ -96,24 +98,6 @@ public class MainActivity extends AppCompatActivity {
         personne.setDebutant(switchDebutant.isChecked());
     }
 
-    private void savePersonne() {
-        SharedPreferences prefs = getSharedPreferences(Constantes.PREFS_NAME, MODE_PRIVATE);
-        SharedPreferences.Editor ed = prefs.edit();
-        Gson gson = new Gson();
-        String str = gson.toJson(personne);
-        ed.putString(Constantes.PREF_PERSONNE, str);
-        ed.apply();
-    }
-
-    private void loadPersonne() {
-        SharedPreferences prefs = getSharedPreferences(Constantes.PREFS_NAME, MODE_PRIVATE);
-        String str = prefs.getString(Constantes.PREF_PERSONNE, null);
-        if (str != null) {
-            Gson gson = new Gson();
-            personne = gson.fromJson(str, Personne.class);
-        }
-    }
-
     private void demanderPermissionNotification() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
@@ -125,15 +109,10 @@ public class MainActivity extends AppCompatActivity {
 
     private void onConsoClick(View v) {
         controlsToPersonne();
-        
-        Intent intent = new Intent(this, Alcool.class);
-        intent.putExtra("person", personne);
-        activityResultLauncher.launch(intent);
+        repository.savePersonne(personne);
+        startActivity(new Intent(this, Alcool.class));
     }
 
-    /**
-     * Appelée au retour de Alcool avec RESULT_OK.
-     */
     private void returnFromEditPerson(Intent data) {
         if (data != null && data.getExtras() != null) {
             personne = (Personne) data.getExtras().getSerializable("person");

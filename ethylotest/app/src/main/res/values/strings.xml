@@ -32,7 +32,7 @@
 
     <!-- Notifications -->
     <string name="notif_channel_name">Alcoolémie</string>
-    <string name="notif_titre">Vous pouvez conduire !</string>
+    <string name="notif_titre">Vous pouvez conduire</string>
     <string name="notif_message">Votre alcoolémie est redescendue sous le seuil légal.</string>
 
     <!-- Tableau boissons prédéfinies -->

@@ -1,16 +1,14 @@
 package rs.iut.ethylotest;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
-
-import androidx.work.OneTimeWorkRequest;
-import androidx.work.WorkManager;
-
-import java.util.concurrent.TimeUnit;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -21,12 +19,10 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.google.gson.Gson;
-
 /** Écran de saisie d'une boisson : sélection prédéfinie ou personnalisée, et déclenchement de la consommation. */
 public class Alcool extends AppCompatActivity {
 
-    // Boissons prédéfinies : volume en ml, degré en fraction
+    // Boissons prédéfinies : {volume en ml, degré en fraction}
     private static final double[][] PREDEFINIS = {
             {120, 0.13},  // Vin
             {250, 0.06},  // Bière
@@ -37,11 +33,10 @@ public class Alcool extends AppCompatActivity {
     private Spinner spinnerBoisson;
     private EditText editVolume;
     private EditText editDegre;
-    private Button btnConsommer;
-    private Button btnRetour;
     private TextView tvTauxActuel;
 
     private Boisson boisson;
+    private AlcoolRepository repository;
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Runnable runnable = new Runnable() {
@@ -62,19 +57,18 @@ public class Alcool extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_alcool);
 
+        repository = new AlcoolRepository(this);
+
         spinnerBoisson = findViewById(R.id.spinnerBoisson);
-        editVolume     = findViewById(R.id.editVolume);
-        editDegre      = findViewById(R.id.editDegre);
-        btnConsommer   = findViewById(R.id.btnConsommer);
-        btnRetour      = findViewById(R.id.btnRetour);
-        tvTauxActuel   = findViewById(R.id.tvTauxActuel);
+        editVolume = findViewById(R.id.editVolume);
+        editDegre = findViewById(R.id.editDegre);
+        tvTauxActuel = findViewById(R.id.tvTauxActuel);
 
         boisson = new Boisson();
-
         setupSpinner();
 
-        btnConsommer.setOnClickListener(this::onConsommer);
-        btnRetour.setOnClickListener(v -> finish());
+        findViewById(R.id.btnConsommer).setOnClickListener(this::onConsommer);
+        findViewById(R.id.btnRetour).setOnClickListener(v -> finish());
         findViewById(R.id.btnVoirAlcoolemie).setOnClickListener(v ->
                 startActivity(new Intent(this, AlcoolemieActivity.class)));
     }
@@ -87,12 +81,12 @@ public class Alcool extends AppCompatActivity {
         handler.post(runnable);
     }
 
-    /** Stoppe le timer et sauvegarde la boisson courante dans les SharedPreferences. */
+    /** Stoppe le timer et sauvegarde la boisson courante. */
     @Override
     protected void onStop() {
         handler.removeCallbacks(runnable);
         controlsToBoisson();
-        saveBoisson();
+        repository.saveBoisson(boisson);
         super.onStop();
     }
 
@@ -132,21 +126,10 @@ public class Alcool extends AppCompatActivity {
         }
     }
 
-    private void saveBoisson() {
-        SharedPreferences prefs = getSharedPreferences(Constantes.PREFS_NAME, MODE_PRIVATE);
-        SharedPreferences.Editor ed = prefs.edit();
-        Gson gson = new Gson();
-        ed.putString(Constantes.PREF_BOISSON, gson.toJson(boisson));
-        ed.apply();
-    }
-
     private void loadBoisson() {
-        SharedPreferences prefs = getSharedPreferences(Constantes.PREFS_NAME, MODE_PRIVATE);
-        String str = prefs.getString(Constantes.PREF_BOISSON, null);
-        if (str != null) {
-            Gson gson = new Gson();
-            boisson = gson.fromJson(str, Boisson.class);
-            // champ personalisé
+        Boisson charge = repository.loadBoisson();
+        if (charge != null) {
+            boisson = charge;
             spinnerBoisson.setSelection(IDX_CUSTOM);
             editVolume.setText(String.valueOf((int) boisson.getVolume()));
             editDegre.setText(String.valueOf((int) (boisson.getDegre() * 100)));
@@ -155,85 +138,69 @@ public class Alcool extends AppCompatActivity {
 
     private void onConsommer(View v) {
         controlsToBoisson();
+        String erreur = null;
+        Personne personne = null;
+        double poids = 0;
 
         if (boisson.getVolume() <= 0 || boisson.getDegre() <= 0) {
-            Toast.makeText(this, getString(R.string.erreur_saisie), Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        // Lire la personne
-        SharedPreferences prefs = getSharedPreferences(Constantes.PREFS_NAME, MODE_PRIVATE);
-        String strPersonne = prefs.getString(Constantes.PREF_PERSONNE, null);
-        if (strPersonne == null) {
-            Toast.makeText(this, getString(R.string.erreur_personne), Toast.LENGTH_SHORT).show();
-            return;
-        }
-        Gson gson = new Gson();
-        Personne personne = gson.fromJson(strPersonne, Personne.class);
-
-        double poids = 0;
-        try { poids = Double.parseDouble(personne.getPoids()); } catch (NumberFormatException e) { /* 0 */ }
-        if (poids <= 0) {
-            Toast.makeText(this, getString(R.string.erreur_poids), Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        // K : coefficient de diffusion (0.7 homme, 0.8 femme)
-        double absorb;
-        if (personne.isSexe()) {
-            absorb = 0.8;
+            erreur = getString(R.string.erreur_saisie);
         } else {
-            absorb = 0.7;
+            personne = repository.loadPersonne();
+            if (personne == null) {
+                erreur = getString(R.string.erreur_personne);
+            } else {
+                try {
+                    poids = Double.parseDouble(personne.getPoids());
+                } catch (NumberFormatException ignored) {}
+                if (poids <= 0) {
+                    erreur = getString(R.string.erreur_poids);
+                }
+            }
         }
 
-        double contribution = boisson.getVolume() * boisson.getDegre() * 0.8 / (absorb * poids);
-        double tauxActuel = Double.parseDouble(prefs.getString(Constantes.PREF_TAUX, "0.0"));
-        long dernierTimestamp = prefs.getLong(Constantes.PREF_TIMESTAMP, System.currentTimeMillis());
-        long maintenant = System.currentTimeMillis();
-        double heuresEcoulees = (maintenant - dernierTimestamp) / 3600000.0;
-        tauxActuel = Math.max(0, tauxActuel - heuresEcoulees * Constantes.TAUX_ELIMINATION);
-        tauxActuel += contribution;
+        if (erreur != null) {
+            Toast.makeText(this, erreur, Toast.LENGTH_SHORT).show();
+        } else {
+            double contribution = AlcoolCalculateur.calculerContribution(boisson, personne);
+            double tauxActuel = AlcoolCalculateur.calculerTauxActuel(repository.loadTaux(), repository.loadTimestamp());
+            tauxActuel += contribution;
 
-        // Sauvegarder
-        SharedPreferences.Editor ed = prefs.edit();
-        ed.putString(Constantes.PREF_TAUX, String.valueOf(tauxActuel));
-        ed.putLong(Constantes.PREF_TIMESTAMP, maintenant);
-        ed.apply();
+            repository.saveTauxEtTimestamp(tauxActuel, System.currentTimeMillis());
+            repository.saveBoisson(boisson);
 
-        saveBoisson();
-        afficherTauxActuel();
+            planifierNotification(tauxActuel, AlcoolCalculateur.getSeuil(personne));
 
-        double seuil = personne.isDebutant() ? Constantes.SEUIL_DEBUTANT : Constantes.SEUIL_NORMAL;
-        planifierNotification(tauxActuel, seuil);
-
-        Toast.makeText(this,
-                String.format(getString(R.string.boisson_ajoutee), contribution),
-                Toast.LENGTH_SHORT).show();
-    }
-
-    private void planifierNotification(double taux, double seuil) {
-        WorkManager wm = WorkManager.getInstance(this);
-        wm.cancelAllWorkByTag(Constantes.NOTIF_TAG);
-
-        if (taux <= seuil) return;
-
-        double heuresRestantes = (taux - seuil) / Constantes.TAUX_ELIMINATION;
-        long delayMs = (long) (heuresRestantes * 3600000);
-
-        OneTimeWorkRequest requete = new OneTimeWorkRequest.Builder(NotificationWorker.class)
-                .setInitialDelay(delayMs, TimeUnit.MILLISECONDS)
-                .addTag(Constantes.NOTIF_TAG)
-                .build();
-
-        wm.enqueue(requete);
+            Toast.makeText(this,
+                    String.format(getString(R.string.boisson_ajoutee), contribution),
+                    Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void afficherTauxActuel() {
-        SharedPreferences prefs = getSharedPreferences(Constantes.PREFS_NAME, MODE_PRIVATE);
-        double taux = Double.parseDouble(prefs.getString(Constantes.PREF_TAUX, "0.0"));
-        long dernierTimestamp = prefs.getLong(Constantes.PREF_TIMESTAMP, System.currentTimeMillis());
-        double heuresEcoulees = (System.currentTimeMillis() - dernierTimestamp) / 3600000.0;
-        taux = Math.max(0, taux - heuresEcoulees * Constantes.TAUX_ELIMINATION);
+        double taux = AlcoolCalculateur.calculerTauxActuel(repository.loadTaux(), repository.loadTimestamp());
         tvTauxActuel.setText(String.format(getString(R.string.taux_actuel), taux));
+    }
+
+    private void planifierNotification(double taux, double seuil) {
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(this, NotificationReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                this, Constantes.NOTIF_ID, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+        alarmManager.cancel(pendingIntent);
+
+        if (taux <= seuil) {
+            return;
+        }
+
+        double heuresRestantes = (taux - seuil) / Constantes.TAUX_ELIMINATION;
+        long triggerTime = System.currentTimeMillis() + (long) (heuresRestantes * Constantes.MS_PAR_HEURE);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
+            alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent);
+        } else {
+            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent);
+        }
     }
 }

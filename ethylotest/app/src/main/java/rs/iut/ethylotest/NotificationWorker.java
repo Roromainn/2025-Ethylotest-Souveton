@@ -3,15 +3,12 @@ package rs.iut.ethylotest;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Build;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
-
-import com.google.gson.Gson;
 
 /** Worker exécuté en arrière-plan pour envoyer la notification "peut conduire". */
 public class NotificationWorker extends Worker {
@@ -21,26 +18,18 @@ public class NotificationWorker extends Worker {
         super(context, params);
     }
 
+    /** Vérifie le taux actuel et envoie la notification si la personne peut conduire. */
     @NonNull
     @Override
     public Result doWork() {
-        SharedPreferences prefs = getApplicationContext()
-                .getSharedPreferences(Constantes.PREFS_NAME, Context.MODE_PRIVATE);
+        AlcoolRepository repository = new AlcoolRepository(getApplicationContext());
+        double taux = AlcoolCalculateur.calculerTauxActuel(repository.loadTaux(), repository.loadTimestamp());
 
-        double taux = Double.parseDouble(prefs.getString(Constantes.PREF_TAUX, "0.0"));
-        long timestamp = prefs.getLong(Constantes.PREF_TIMESTAMP, System.currentTimeMillis());
-        double heuresEcoulees = (System.currentTimeMillis() - timestamp) / 3600000.0;
-        taux = Math.max(0, taux - heuresEcoulees * Constantes.TAUX_ELIMINATION);
+        Personne personne = repository.loadPersonne();
+        double seuil = personne != null
+                ? AlcoolCalculateur.getSeuil(personne)
+                : Constantes.SEUIL_NORMAL;
 
-        boolean debutant = false;
-        String strPersonne = prefs.getString(Constantes.PREF_PERSONNE, null);
-        if (strPersonne != null) {
-            Personne personne = new Gson().fromJson(strPersonne, Personne.class);
-            debutant = personne.isDebutant();
-        }
-        double seuil = debutant ? Constantes.SEUIL_DEBUTANT : Constantes.SEUIL_NORMAL;
-
-        // Vérifie que le taux est toujours sous le seuil (l'utilisateur a pu boire davantage)
         if (taux <= seuil) {
             envoyerNotification();
         }

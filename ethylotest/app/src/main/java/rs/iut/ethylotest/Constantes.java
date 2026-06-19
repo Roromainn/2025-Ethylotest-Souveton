@@ -5,6 +5,18 @@ public class Constantes {
     /** Taux d'élimination en g/l par heure. Mettre 0.15 en production. */
     public static final double TAUX_ELIMINATION = 15.0;
 
+    /** Densité de l'alcool pur utilisée dans la formule de Widmark. */
+    public static final double DENSITE_ALCOOL = 0.8;
+
+    /** Coefficient de Widmark pour un homme. */
+    public static final double K_HOMME = 0.7;
+
+    /** Coefficient de Widmark pour une femme. */
+    public static final double K_FEMME = 0.8;
+
+    /** Nombre de millisecondes dans une heure. */
+    public static final long MS_PAR_HEURE = 3_600_000L;
+
     /** Intervalle de rafraîchissement en ms. Mettre 60000 en production. */
     public static long INTERVALLE_MAJ_MS = 1000;
 
